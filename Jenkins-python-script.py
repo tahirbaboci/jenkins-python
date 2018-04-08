@@ -3,6 +3,26 @@ import requests
 import jenkins
 import datetime
 from django.db import models
+import sqlite3
+from sqlite3 import Error
+
+
+
+def create_connection(db_file):
+    try:
+        conn = sqlite3.connect(db_file)
+        print(sqlite3.version)
+        c = conn.cursor()
+        c.c.execute('''CREATE TABLE Jobs
+             (jenkins_id number, name text, timeStamp date, result text, building text, extimateDuration text)''')
+        conn.commit()
+    except Error as e:
+        print(e)
+    finally:
+        conn.close()
+
+if __name__ == '__main__':
+    create_connection("/home/anonymouseaggle/Desktop/ISEC Subjects/Advanced Database Management/SQLite3/jenkins.db")
 
 
 def connectToJenkins(url, username, password):
@@ -15,12 +35,12 @@ def connectToJenkins(url, username, password):
 
 def addJob(jlist):
     for j in jlist:
-        j = Jobs()
+        j
         j.save()
 
 
-def getLastJobId(session, name):
-    cursor.execute("SELECT * FROM table ORDER BY id DESC LIMIT 1")
+def getLastJobId():
+    cursor.execute("SELECT jenkins_id FROM Jobs ORDER BY jenkins_id DESC LIMIT 1")
     job = cursor.fetchone()
     if (job != None):
         return job.jen_id
@@ -47,7 +67,7 @@ def createJobList(start, lastBuildNumber, jobName):
         current_as_jobs.estimatedDuration = current['estimatedDuration']
         current_as_jobs.name = jobName
         current_as_jobs.result = current['result']
-        current_as_jobs.timeStamp = datetime.datetime.fromtimestamp(long(current['timestamp']) * 0.001)
+        current_as_jobs.timeStamp = datetime.datetime.fromtimestamp(float(current['timestamp']) * 0.001)
         jList.append(current_as_jobs)
     return jList
 
@@ -68,7 +88,7 @@ except jenkins.JenkinsException as e:
 
 if auth:
 
-    # get a list of all jobss
+    # get a list of all jobsss
     jobs = server.get_all_jobs()
     for j in jobs:
         jobName = j['name']  # get job name
@@ -77,7 +97,7 @@ if auth:
         lastBuildNumber = server.get_job_info(jobName)['lastBuild'][
             'number']  # get last build number from Jenkins for this job
 
-        # if job not stored, update the db with all entries
+        #
         if lastJobId == None:
             start = 0
         # if job exists, update the db with new entrie
